@@ -5,10 +5,9 @@
 - **Stack:** Strictly follow the existing architecture—**BLoC** for state management, **Sembast** for local NoSQL persistence, `audio_service` for background playback, and `podcast_search` for **Podcast Index** and **iTunes** search.
 
 ## Core Priorities
- - minimalistic code and features
- - specialised for one user
+- **Minimalism:** Keep code and features minimalistic.
+- **Single User:** Specialised for one user.
 - **Search & Stability:** Prioritize Android playback stability and fast search across remote directories and local feeds.
-
 
 ## Cloud VM & Build Rules
 - **Testing:** Write idiomatic Dart and verify changes with `flutter analyze` and `flutter test`.
@@ -21,4 +20,4 @@
 ## Git & Commits
 - **Commit Messages:** Keep commit titles short and put details in the commit description.
 - **Scope:** One commit per feature or fix.
-- **Pre-Push Review:** Before pushing changes, start a `hydrogen medium` subagent to review the commit, focusing on code style and minimalism.
+- **Pre-Push Review:** Before pushing changes, start a `hydrogen medium` subagent to review the commit, focusing on code style, minimalism, and whether `README.md` needs updating. If significant changes are made as a result of the review, start another review. Always wait for user confirmation after the review before pushing.
