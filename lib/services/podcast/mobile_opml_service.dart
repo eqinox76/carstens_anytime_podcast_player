@@ -4,74 +4,20 @@
 
 import 'dart:io';
 
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/repository/repository.dart';
 import 'package:anytime/services/podcast/opml_service.dart';
 import 'package:anytime/services/podcast/podcast_service.dart';
 import 'package:anytime/state/opml_state.dart';
 import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
 
 class MobileOPMLService extends OPMLService {
-  final log = Logger('MobileOPMLService');
-  var process = false;
-
   final PodcastService podcastService;
-  final Repository repository;
 
   MobileOPMLService({
     required this.podcastService,
-    required this.repository,
   });
-
-  @override
-  Stream<OPMLState> loadOPMLFile(String file) async* {
-    yield OPMLParsingState();
-
-    process = true;
-
-    final opmlFile = File(file);
-    final document = XmlDocument.parse(opmlFile.readAsStringSync());
-    final outlines = document.findAllElements('outline');
-    final pods = <OmplOutlineTag>[];
-
-    for (var outline in outlines) {
-      pods.add(OmplOutlineTag.parse(outline));
-    }
-
-    var total = pods.length;
-    var current = 0;
-
-    for (var p in pods) {
-      if (process) {
-        yield OPMLLoadingState(
-          current: ++current,
-          total: total,
-          podcast: p.text,
-        );
-
-        try {
-          log.fine('Importing podcast ${p.xmlUrl}');
-
-          var result = await podcastService.loadPodcast(
-            podcast: Podcast(guid: '', link: '', title: p.text!, url: p.xmlUrl!),
-            ignoreCache: true,
-          );
-
-          if (result != null) {
-            await podcastService.subscribe(result);
-          }
-        } catch (e) {
-          log.fine('Failed to load podcast ${p.xmlUrl}');
-        }
-      }
-    }
-
-    yield OPMLCompletedState();
-  }
 
   @override
   Stream<OPMLState> saveOPMLFile() async* {
@@ -117,27 +63,5 @@ class MobileOPMLService extends OPMLService {
     );
 
     yield OPMLCompletedState();
-  }
-
-  @override
-  void cancel() {
-    process = false;
-  }
-}
-
-class OmplOutlineTag {
-  final String? text;
-  final String? xmlUrl;
-
-  OmplOutlineTag({
-    this.text,
-    this.xmlUrl,
-  });
-
-  factory OmplOutlineTag.parse(XmlElement element) {
-    return OmplOutlineTag(
-      text: element.getAttribute('text')?.trim(),
-      xmlUrl: element.getAttribute('xmlUrl')?.trim(),
-    );
   }
 }

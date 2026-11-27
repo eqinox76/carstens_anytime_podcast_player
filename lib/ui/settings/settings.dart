@@ -2,20 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/podcast/opml_bloc.dart';
 import 'package:anytime/bloc/podcast/podcast_bloc.dart';
 import 'package:anytime/bloc/settings/settings_bloc.dart';
 import 'package:anytime/core/utils.dart';
 import 'package:anytime/entities/app_settings.dart';
 import 'package:anytime/l10n/L.dart';
-import 'package:anytime/state/opml_state.dart';
+import 'package:anytime/ui/library/antennapod_import.dart';
 import 'package:anytime/ui/library/opml_export.dart';
-import 'package:anytime/ui/library/opml_import.dart';
 import 'package:anytime/ui/settings/episode_refresh.dart';
 import 'package:anytime/ui/settings/search_provider.dart';
 import 'package:anytime/ui/settings/settings_section_label.dart';
 import 'package:anytime/ui/settings/theme_select.dart';
-import 'package:anytime/ui/widgets/action_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -50,7 +47,6 @@ class _SettingsState extends State<Settings> {
   Widget _buildList(BuildContext context) {
     var settingsBloc = Provider.of<SettingsBloc>(context);
     var podcastBloc = Provider.of<PodcastBloc>(context);
-    var opmlBloc = Provider.of<OPMLBloc>(context);
 
     return StreamBuilder<AppSettings>(
         stream: settingsBloc.settings,
@@ -158,43 +154,24 @@ class _SettingsState extends State<Settings> {
               ),
               SettingsDividerLabel(label: L.of(context)!.settings_data_divider_label),
               ListTile(
-                title: Text(L.of(context)!.settings_import_opml),
+                title: Text(L.of(context)!.settings_import_antennapod),
                 onTap: () async {
-                  var result = (await FilePicker.platform.pickFiles(
+                  var result = await FilePicker.platform.pickFiles(
                     type: FileType.any,
-                  ));
+                  );
 
                   if (result != null && result.count > 0) {
                     var file = result.files.first;
 
-                    if (context.mounted) {
-                      var e = await showPlatformDialog<bool>(
+                    if (file.path != null && context.mounted) {
+                      await showPlatformDialog<void>(
                         androidBarrierDismissible: false,
                         useRootNavigator: false,
                         context: context,
-                        builder: (_) => PopScope(
-                          canPop: true,
-                          onPopInvokedWithResult: (didPop, result) async => false,
-                          child: BasicDialogAlert(
-                            title: Text(L.of(context)!.settings_import_opml),
-                            content: OPMLImport(file: file.path!),
-                            actions: <Widget>[
-                              BasicDialogAction(
-                                title: ActionText(L.of(context)!.cancel_button_label),
-                                onPressed: () {
-                                  return Navigator.pop(context, true);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
+                        builder: (_) => AntennaPodImportDialog(file: file.path!),
                       );
-
-                      if (e != null && e) {
-                        opmlBloc.opmlEvent(OPMLCancelEvent());
-                      }
+                      podcastBloc.podcastEvent(PodcastEvent.reloadSubscriptions);
                     }
-                    podcastBloc.podcastEvent(PodcastEvent.reloadSubscriptions);
                   }
                 },
               ),

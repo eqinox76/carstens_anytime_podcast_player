@@ -2410,6 +2410,56 @@ class L {
           locale: localeName,
         );
   }
+
+  String get settings_import_antennapod {
+    return message('settings_import_antennapod') ??
+        Intl.message(
+          'Import from AntennaPod',
+          name: 'settings_import_antennapod',
+          desc: 'Import from AntennaPod settings menu item and dialog title',
+          locale: localeName,
+        );
+  }
+
+  String get label_antennapod_importing {
+    return message('label_antennapod_importing') ??
+        Intl.message(
+          'Importing from AntennaPod',
+          name: 'label_antennapod_importing',
+          desc: 'Status label shown while importing from AntennaPod',
+          locale: localeName,
+        );
+  }
+
+  String get label_antennapod_import_complete {
+    return message('label_antennapod_import_complete') ??
+        Intl.message(
+          'Import complete',
+          name: 'label_antennapod_import_complete',
+          desc: 'Dialog title when AntennaPod import completes',
+          locale: localeName,
+        );
+  }
+
+  String get label_antennapod_import_cancelled {
+    return message('label_antennapod_import_cancelled') ??
+        Intl.message(
+          'Import cancelled',
+          name: 'label_antennapod_import_cancelled',
+          desc: 'Dialog title when AntennaPod import is cancelled',
+          locale: localeName,
+        );
+  }
+
+  String get label_antennapod_import_error {
+    return message('label_antennapod_import_error') ??
+        Intl.message(
+          'Import failed',
+          name: 'label_antennapod_import_error',
+          desc: 'Dialog title when AntennaPod import fails',
+          locale: localeName,
+        );
+  }
 }
 
 class AnytimeLocalisationsDelegate extends LocalizationsDelegate<L> {

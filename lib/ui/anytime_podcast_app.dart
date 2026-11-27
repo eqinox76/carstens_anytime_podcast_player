@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:anytime/api/podcast/mobile_podcast_api.dart';
 import 'package:anytime/api/podcast/podcast_api.dart';
 import 'package:anytime/bloc/discovery/discovery_bloc.dart';
+import 'package:anytime/bloc/podcast/antennapod_import_bloc.dart';
 import 'package:anytime/bloc/podcast/audio_bloc.dart';
 import 'package:anytime/bloc/podcast/episode_bloc.dart';
 import 'package:anytime/bloc/podcast/opml_bloc.dart';
@@ -30,6 +31,8 @@ import 'package:anytime/services/download/mobile_download_manager.dart';
 import 'package:anytime/services/download/mobile_download_service.dart';
 import 'package:anytime/services/notifications/mobile_notification_service.dart';
 import 'package:anytime/services/notifications/notification_service.dart';
+import 'package:anytime/services/podcast/antennapod_database_reader.dart';
+import 'package:anytime/services/podcast/antennapod_import_service.dart';
 import 'package:anytime/services/podcast/mobile_opml_service.dart';
 import 'package:anytime/services/podcast/mobile_podcast_service.dart';
 import 'package:anytime/services/podcast/opml_service.dart';
@@ -73,6 +76,7 @@ class AnytimePodcastApp extends StatefulWidget {
   late NotificationService notificationService;
   late AudioPlayerService audioPlayerService;
   late OPMLService opmlService;
+  late AntennaPodImportService antennaPodImportService;
   PodcastService? podcastService;
   SettingsBloc? settingsBloc;
   MobileSettingsService mobileSettingsService;
@@ -118,6 +122,11 @@ class AnytimePodcastApp extends StatefulWidget {
     );
 
     opmlService = MobileOPMLService(
+      podcastService: podcastService!,
+    );
+
+    antennaPodImportService = MobileAntennaPodImportService(
+      databaseReader: const MethodChannelAntennaPodDatabaseReader(),
       podcastService: podcastService!,
       repository: repository,
     );
@@ -207,6 +216,10 @@ class AnytimePodcastAppState extends State<AnytimePodcastApp> {
         ),
         Provider<OPMLBloc>(
           create: (_) => OPMLBloc(opmlService: widget.opmlService),
+          dispose: (_, value) => value.dispose(),
+        ),
+        Provider<AntennaPodImportBloc>(
+          create: (_) => AntennaPodImportBloc(importService: widget.antennaPodImportService),
           dispose: (_, value) => value.dispose(),
         ),
         Provider<QueueBloc>(
