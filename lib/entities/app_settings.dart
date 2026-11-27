@@ -94,7 +94,7 @@ class AppSettings {
 
   AppSettings.sensibleDefaults()
       : theme = 'dark',
-        markDeletedEpisodesAsPlayed = false,
+        markDeletedEpisodesAsPlayed = true,
         deleteDownloadedPlayedEpisodes = false,
         storeDownloadsSDCard = false,
         playbackSpeed = 1.0,

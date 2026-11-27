@@ -1739,4 +1739,37 @@ void main() {
       expect(episode2 == podcast1.episodes[1], true);
     });
   });
+
+  group('Podcast auto-download count persistence', () {
+    test('Podcast.autoDownloadCount defaults to 5 and persists', () async {
+      expect(podcast1.autoDownloadCount, Podcast.defaultAutoDownloadCount);
+      expect(podcast1.autoDownloadCount, 5);
+
+      await persistenceService!.savePodcast(podcast1);
+
+      final loaded = (await persistenceService!.findPodcastById(podcast1.id!))!;
+      expect(loaded.autoDownloadCount, 5);
+    });
+
+    test('Podcast.autoDownloadCount persists custom values 0 and 3', () async {
+      podcast1.autoDownloadCount = 0;
+      podcast2.autoDownloadCount = 3;
+
+      await persistenceService!.savePodcast(podcast1);
+      await persistenceService!.savePodcast(podcast2);
+
+      final loaded1 = (await persistenceService!.findPodcastById(podcast1.id!))!;
+      final loaded2 = (await persistenceService!.findPodcastById(podcast2.id!))!;
+
+      expect(loaded1.autoDownloadCount, 0);
+      expect(loaded2.autoDownloadCount, 3);
+    });
+
+    test('Podcast.fromMap falls back to 5 when autoDownloadCount is absent', () {
+      final map = podcast1.toMap()..remove('autoDownloadCount');
+      final loaded = Podcast.fromMap(1, map);
+
+      expect(loaded.autoDownloadCount, 5);
+    });
+  });
 }

@@ -7,6 +7,7 @@ import 'package:anytime/entities/feed.dart';
 import 'package:anytime/entities/podcast.dart';
 import 'package:anytime/l10n/L.dart';
 import 'package:anytime/state/bloc_state.dart';
+import 'package:anytime/ui/widgets/auto_download_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -58,11 +59,20 @@ class _MaterialPodcastMenu extends StatelessWidget {
     return StreamBuilder<BlocState<Podcast>>(
         stream: bloc.details,
         builder: (context, snapshot) {
+          final state = snapshot.data;
+          final currentPodcast =
+              state is BlocPopulatedState<Podcast> && state.results == podcast ? state.results! : podcast;
+
           return PopupMenuButton<String>(
             position: PopupMenuPosition.under,
             offset: Offset.fromDirection(135.0, 40.0),
             onSelected: (event) {
-              handleMenuActions(value: event, bloc: bloc);
+              handleMenuActions(
+                context: context,
+                value: event,
+                bloc: bloc,
+                currentPodcast: currentPodcast,
+              );
             },
             icon: Icon(
               Icons.more_vert,
@@ -111,6 +121,21 @@ class _MaterialPodcastMenu extends StatelessWidget {
                     ],
                   ),
                 ),
+                PopupMenuItem<String>(
+                  value: 'autodownload',
+                  enabled: currentPodcast.subscribed,
+                  child: Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8.0),
+                        child: Icon(Icons.download_for_offline_outlined, size: 18.0),
+                      ),
+                      Text(
+                        '${L.of(context)!.auto_download_label} (${currentPodcast.autoDownloadCount == 0 ? L.of(context)!.auto_download_off_label : currentPodcast.autoDownloadCount})',
+                      ),
+                    ],
+                  ),
+                ),
                 const PopupMenuDivider(),
                 PopupMenuItem<String>(
                   value: 'sharepod',
@@ -146,8 +171,10 @@ class _MaterialPodcastMenu extends StatelessWidget {
   }
 
   void handleMenuActions({
+    required BuildContext context,
     required String value,
     required PodcastBloc bloc,
+    required Podcast currentPodcast,
   }) async {
     if (value == 'ma') {
       bloc.podcastEvent(PodcastEvent.markAllPlayed);
@@ -158,6 +185,21 @@ class _MaterialPodcastMenu extends StatelessWidget {
         podcast: podcast,
         forceFetch: true,
       ));
+    } else if (value == 'autodownload') {
+      if (!context.mounted) {
+        return;
+      }
+
+      final result = await showDialog<int>(
+        context: context,
+        builder: (_) => AutoDownloadDialog(
+          initialCount: currentPodcast.autoDownloadCount,
+        ),
+      );
+
+      if (result != null) {
+        bloc.autoDownloadCount(result);
+      }
     } else if (value == 'web') {
       final uri = Uri.parse(podcast.link!);
 
@@ -187,29 +229,33 @@ class _CupertinoContextMenu extends StatelessWidget {
     return StreamBuilder<BlocState<Podcast>>(
         stream: bloc.details,
         builder: (context, snapshot) {
+          final state = snapshot.data;
+          final currentPodcast =
+              state is BlocPopulatedState<Podcast> && state.results == podcast ? state.results! : podcast;
+
           return IconButton(
             tooltip: L.of(context)!.podcast_options_overflow_menu_semantic_label,
             icon: const Icon(CupertinoIcons.ellipsis),
             onPressed: () => showCupertinoModalPopup<void>(
               context: context,
-              builder: (BuildContext context) {
+              builder: (BuildContext sheetContext) {
                 return CupertinoActionSheet(
                   actions: <Widget>[
                     CupertinoActionSheetAction(
                       isDefaultAction: true,
                       onPressed: () {
                         bloc.podcastEvent(PodcastEvent.markAllPlayed);
-                        Navigator.pop(context, 'Cancel');
+                        Navigator.pop(sheetContext, 'Cancel');
                       },
-                      child: Text(L.of(context)!.mark_episodes_played_label),
+                      child: Text(L.of(sheetContext)!.mark_episodes_played_label),
                     ),
                     CupertinoActionSheetAction(
                       isDefaultAction: true,
                       onPressed: () {
                         bloc.podcastEvent(PodcastEvent.clearAllPlayed);
-                        Navigator.pop(context, 'Cancel');
+                        Navigator.pop(sheetContext, 'Cancel');
                       },
-                      child: Text(L.of(context)!.mark_episodes_not_played_label),
+                      child: Text(L.of(sheetContext)!.mark_episodes_not_played_label),
                     ),
                     CupertinoActionSheetAction(
                       isDefaultAction: true,
@@ -218,22 +264,47 @@ class _CupertinoContextMenu extends StatelessWidget {
                           podcast: podcast,
                           forceFetch: true,
                         ));
-                        if (context.mounted) {
-                          Navigator.pop(context, 'Cancel');
+                        if (sheetContext.mounted) {
+                          Navigator.pop(sheetContext, 'Cancel');
                         }
                       },
-                      child: Text(L.of(context)!.refresh_feed_label),
+                      child: Text(L.of(sheetContext)!.refresh_feed_label),
                     ),
+                    if (currentPodcast.subscribed)
+                      CupertinoActionSheetAction(
+                        isDefaultAction: true,
+                        onPressed: () async {
+                          Navigator.pop(sheetContext, 'Cancel');
+
+                          if (!context.mounted) {
+                            return;
+                          }
+
+                          final result = await showDialog<int>(
+                            context: context,
+                            builder: (_) => AutoDownloadDialog(
+                              initialCount: currentPodcast.autoDownloadCount,
+                            ),
+                          );
+
+                          if (result != null) {
+                            bloc.autoDownloadCount(result);
+                          }
+                        },
+                        child: Text(
+                          '${L.of(sheetContext)!.auto_download_label} (${currentPodcast.autoDownloadCount == 0 ? L.of(sheetContext)!.auto_download_off_label : currentPodcast.autoDownloadCount})',
+                        ),
+                      ),
                     CupertinoActionSheetAction(
                       isDefaultAction: true,
                       onPressed: () async {
                         await sharePodcast(podcast: podcast);
 
-                        if (context.mounted) {
-                          Navigator.pop(context, 'Cancel');
+                        if (sheetContext.mounted) {
+                          Navigator.pop(sheetContext, 'Cancel');
                         }
                       },
-                      child: Text(L.of(context)!.share_podcast_option_label),
+                      child: Text(L.of(sheetContext)!.share_podcast_option_label),
                     ),
                     CupertinoActionSheetAction(
                       isDefaultAction: true,
@@ -247,19 +318,19 @@ class _CupertinoContextMenu extends StatelessWidget {
                           throw Exception('Could not launch $uri');
                         }
 
-                        if (context.mounted) {
-                          Navigator.pop(context, 'Cancel');
+                        if (sheetContext.mounted) {
+                          Navigator.pop(sheetContext, 'Cancel');
                         }
                       },
-                      child: Text(L.of(context)!.open_show_website_label),
+                      child: Text(L.of(sheetContext)!.open_show_website_label),
                     ),
                   ],
                   cancelButton: CupertinoActionSheetAction(
                     isDefaultAction: true,
                     onPressed: () {
-                      Navigator.pop(context, 'Cancel');
+                      Navigator.pop(sheetContext, 'Cancel');
                     },
-                    child: Text(L.of(context)!.close_button_label),
+                    child: Text(L.of(sheetContext)!.close_button_label),
                   ),
                 );
               },

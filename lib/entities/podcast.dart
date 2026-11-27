@@ -37,6 +37,9 @@ enum PodcastEpisodeSort {
 ///
 /// When persisted to disk this represents a podcast that is being followed.
 class Podcast {
+  /// Default number of oldest unplayed, unstarted episodes to auto-download per subscription.
+  static const int defaultAutoDownloadCount = 5;
+
   /// Database ID
   int? id;
 
@@ -98,6 +101,9 @@ class Podcast {
   /// Does this podcast contain new episodes since we last loaded it?
   int newEpisodes = 0;
 
+  /// Number of oldest unplayed, unstarted episodes to auto-download (0 disables auto-download).
+  int autoDownloadCount;
+
   /// Total number of episodes for this podcast.
   @Transient()
   int episodeCount = 0;
@@ -122,6 +128,7 @@ class Podcast {
     this.sort = PodcastEpisodeSort.none,
     this.episodes = const <Episode>[],
     this.newEpisodes = 0,
+    this.autoDownloadCount = defaultAutoDownloadCount,
     this.episodeCount = 0,
     this.persons,
     this.etag = '',
@@ -176,6 +183,7 @@ class Podcast {
       'filter': filter.id,
       'sort': sort.id,
       'newEpisodes': newEpisodes,
+      'autoDownloadCount': autoDownloadCount,
       'funding': (funding ?? <Funding>[]).map((funding) => funding.toMap()).toList(growable: false),
       'person': (persons ?? <Person>[]).map((persons) => persons.toMap()).toList(growable: false),
       'rssFeedLastUpdated': _rssFeedLastUpdated?.millisecondsSinceEpoch ?? DateTime(1970, 1, 1).millisecondsSinceEpoch,
@@ -255,6 +263,8 @@ class Podcast {
       };
     }
 
+    final rawAutoDownloadCount = (podcast['autoDownloadCount'] as int?) ?? defaultAutoDownloadCount;
+
     return Podcast(
       id: key,
       guid: podcast['guid'] as String,
@@ -272,6 +282,7 @@ class Podcast {
       persons: persons,
       subscribedDate: sd,
       newEpisodes: (podcast['newEpisodes'] as int?) ?? 0,
+      autoDownloadCount: rawAutoDownloadCount < 0 ? 0 : rawAutoDownloadCount,
       rssFeedLastUpdated: rssFeedLastUpdated,
       latestEpisodeDate: latestEpisodeDate,
       lastUpdated: lastUpdated,

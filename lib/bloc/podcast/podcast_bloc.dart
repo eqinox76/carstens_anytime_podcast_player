@@ -69,6 +69,9 @@ class PodcastBloc extends Bloc {
   /// Receives subscription and mark/clear as played events.
   final PublishSubject<PodcastEvent> _podcastEvent = PublishSubject<PodcastEvent>();
 
+  /// Receives per-subscription auto-download episode count updates.
+  final PublishSubject<int> _autoDownloadCount = PublishSubject<int>();
+
   /// Receives episode search events.
   final BehaviorSubject<String> _podcastSearchEvent = BehaviorSubject<String>();
 
@@ -113,6 +116,9 @@ class PodcastBloc extends Bloc {
     /// Listen to Podcast subscription, mark/cleared played events
     _listenPodcastStateEvents();
 
+    /// Listen to per-subscription auto-download count updates
+    _listenAutoDownloadCount();
+
     /// Listen for episode search requests
     _listenPodcastSearchEvents();
 
@@ -145,6 +151,7 @@ class PodcastBloc extends Bloc {
     _podcastStream.close();
     _episodesStream.close();
     _podcastEvent.close();
+    _autoDownloadCount.close();
     MobileDownloadService.downloadProgress.close();
     downloadService.dispose();
     super.dispose();
@@ -474,6 +481,16 @@ class PodcastBloc extends Bloc {
     });
   }
 
+  void _listenAutoDownloadCount() {
+    _autoDownloadCount.listen((count) async {
+      if (_podcast != null && _podcast!.subscribed) {
+        _podcast!.autoDownloadCount = count < 0 ? 0 : count;
+        _podcast = await podcastService.save(_podcast!, withEpisodes: false);
+        _podcastStream.add(BlocPopulatedState<Podcast>(results: _podcast));
+      }
+    });
+  }
+
   void _refreshFeeds() {
     podcastService.refreshFeeds(manual: true).then((_) {
       podcastService.subscriptions().then((subscriptions) {
@@ -506,6 +523,8 @@ class PodcastBloc extends Bloc {
   void Function(Episode?) get downloadEpisode => _downloadEpisode.add;
 
   void Function(PodcastEvent) get podcastEvent => _podcastEvent.add;
+
+  void Function(int) get autoDownloadCount => _autoDownloadCount.add;
 
   void Function(String) get podcastSearchEvent => _podcastSearchEvent.add;
 

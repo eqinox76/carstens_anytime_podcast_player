@@ -311,9 +311,10 @@ class MobilePodcastService extends PodcastService {
       // We are, so swap in the stored ID so we update the saved version later.
       pc.id = follow.id;
 
-      // And preserve any filter & sort applied
+      // And preserve any filter, sort & auto-download setting applied
       pc.filter = follow.filter;
       pc.sort = follow.sort;
+      pc.autoDownloadCount = follow.autoDownloadCount;
     }
 
     // Usually, episodes are order by reverse publication date - but not always.
@@ -619,6 +620,11 @@ class MobilePodcastService extends PodcastService {
     if (episode.downloadState == DownloadState.downloaded) {
       if (settingsService.markDeletedEpisodesAsPlayed) {
         episode.played = true;
+      } else if (episode.pguid != null) {
+        final podcast = await repository.findPodcastByGuid(episode.pguid!);
+        if (podcast != null && podcast.autoDownloadCount > 0) {
+          episode.played = true;
+        }
       }
     } else if (episode.downloadState == DownloadState.downloading && episode.downloadPercentage! < 100) {
       await FlutterDownloader.cancel(taskId: episode.downloadTaskId!);
@@ -828,6 +834,14 @@ class MobilePodcastService extends PodcastService {
             if (milliDiff >= timeout.inMilliseconds) {
               _log.fine('We are out of time. Update stopping.');
               break;
+            }
+          }
+
+          if (connectivityResult.contains(ConnectivityResult.wifi) && autoDownloadService != null) {
+            try {
+              await autoDownloadService!.run();
+            } catch (e, s) {
+              _log.warning('Auto-download failed', e, s);
             }
           }
 

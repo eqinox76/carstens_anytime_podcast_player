@@ -31,7 +31,7 @@ class MobileSettingsService extends SettingsService {
   }
 
   @override
-  bool get markDeletedEpisodesAsPlayed => _sharedPreferences.getBool('markplayedasdeleted') ?? false;
+  bool get markDeletedEpisodesAsPlayed => _sharedPreferences.getBool('markplayedasdeleted') ?? true;
 
   @override
   set markDeletedEpisodesAsPlayed(bool value) {

@@ -26,10 +26,10 @@ void main() {
   });
 
   test('Test mark deleted episodes as played', () async {
-    expect(mobileSettingsService?.markDeletedEpisodesAsPlayed, false);
-    expectLater(settingsListener, emits('markplayedasdeleted'));
-    mobileSettingsService?.markDeletedEpisodesAsPlayed = true;
     expect(mobileSettingsService?.markDeletedEpisodesAsPlayed, true);
+    expectLater(settingsListener, emits('markplayedasdeleted'));
+    mobileSettingsService?.markDeletedEpisodesAsPlayed = false;
+    expect(mobileSettingsService?.markDeletedEpisodesAsPlayed, false);
   }, timeout: const Timeout(Duration(milliseconds: timeout)));
 
   test('Test SD card', () async {

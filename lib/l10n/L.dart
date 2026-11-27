@@ -2380,6 +2380,36 @@ class L {
           locale: localeName,
         );
   }
+
+  String get auto_download_label {
+    return message('auto_download_label') ??
+        Intl.message(
+          'Auto-download',
+          name: 'auto_download_label',
+          desc: 'Auto-download menu item and dialog title',
+          locale: localeName,
+        );
+  }
+
+  String get auto_download_off_label {
+    return message('auto_download_off_label') ??
+        Intl.message(
+          'Off',
+          name: 'auto_download_off_label',
+          desc: 'Label shown when auto-download is disabled',
+          locale: localeName,
+        );
+  }
+
+  String get auto_download_subtitle {
+    return message('auto_download_subtitle') ??
+        Intl.message(
+          'Automatically download oldest unplayed episodes on Wi-Fi',
+          name: 'auto_download_subtitle',
+          desc: 'Subtitle explaining per-subscription auto-download behaviour',
+          locale: localeName,
+        );
+  }
 }
 
 class AnytimeLocalisationsDelegate extends LocalizationsDelegate<L> {
