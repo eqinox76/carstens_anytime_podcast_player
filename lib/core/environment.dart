@@ -24,9 +24,9 @@ const feedbackUrl = String.fromEnvironment('FEEDBACK_URL', defaultValue: '');
 /// using dart-define.
 class Environment {
   static const _applicationName = 'Anytime';
-  static const _applicationUrl = 'https://github.com/amugofjava/anytime_podcast_player';
-  static const _projectVersion = '1.4.2';
-  static const _build = '249';
+  static const _applicationUrl = 'https://github.com/eqinox76/carstens_anytime_podcast_player';
+  static const _projectVersion = '0.1';
+  static const _build = '253';
 
   static var _agentString = userAgentAppString;
 

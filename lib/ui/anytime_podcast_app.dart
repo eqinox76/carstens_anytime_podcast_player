@@ -641,13 +641,16 @@ class _AnytimeHomePageState extends State<AnytimeHomePage> with WidgetsBindingOb
               height: 52.0,
             ),
             children: <Widget>[
-              const Text('\u00a9 2020 Ben Hills'),
+              const Text('Maintained by Carsten Rietz (eqinox76)'),
+              const SizedBox(height: 4.0),
+              const Text('Based on Anytime Podcast Player (\u00a9 2020 Ben Hills)'),
+              const SizedBox(height: 8.0),
               GestureDetector(
                 onTap: () {
-                  _launchEmail();
+                  _launchRepoUrl();
                 },
                 child: Text(
-                  'hello@anytimeplayer.app',
+                  'github.com/eqinox76/carstens_anytime_podcast_player',
                   style: TextStyle(
                     decoration: TextDecoration.underline,
                     color: theme.indicatorColor,
@@ -755,8 +758,8 @@ class _AnytimeHomePageState extends State<AnytimeHomePage> with WidgetsBindingOb
     }
   }
 
-  void _launchEmail() async {
-    final uri = Uri.parse('mailto:hello@anytimeplayer.app');
+  void _launchRepoUrl() async {
+    final uri = Uri.parse('https://github.com/eqinox76/carstens_anytime_podcast_player');
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
